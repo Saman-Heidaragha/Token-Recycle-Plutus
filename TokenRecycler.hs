@@ -1,11 +1,11 @@
--- 0. Create Module & Declare Imports
 module Contracts.TokenRecycler where
+
+{-# LANGUAGE TemplateHaskell #-}
 
 import Data.Map qualified as Map
 import Jambhala.Plutus
 import Jambhala.Utils
 
-import Plutus.V1.Ledger.Value qualified as V
 
 
 type SenderPKH = PubKeyHash
@@ -13,6 +13,7 @@ type SenderPKH = PubKeyHash
 type HostPKH = PubKeyHash
 
 type TokenValue = Value
+
 
   -- Define RecycleDatum data type
 data RecycleDatum = RecycleDatum 
@@ -22,6 +23,7 @@ data RecycleDatum = RecycleDatum
   }
 unstableMakeIsData ''RecycleDatum
 
+
 -- | Helper function to check if the given value has at least one token of the given currency symbol and token name.
 hasToken :: CurrencySymbol -> TokenName -> Value -> Bool
 hasToken _ _ v = pany (\(_, _, q) -> q #>= 1) $ flattenValue v
@@ -30,8 +32,9 @@ hasToken _ _ v = pany (\(_, _, q) -> q #>= 1) $ flattenValue v
 setReceiverAddress :: ScriptContext -> Maybe PubKeyHash
 setReceiverAddress (ScriptContext txInfo _) =
     listToMaybe $ txInfoSignatories txInfo
-        
 {-#INLINABLE setReceiverAddress #-}
+
+
     -- Function to calculate the reward based on the output values in txInfo
 rewardX :: ScriptContext -> Value
 rewardX (ScriptContext txInfo _) =
@@ -45,19 +48,21 @@ rewardX (ScriptContext txInfo _) =
 
 
 validatorR :: SenderPKH -> Datum -> Redeemer -> ScriptContext -> Bool
-validatorR senderPKH _ _ ctx@(ScriptContext txInfo _) =
+validatorR senderPKH datum _ ctx@(ScriptContext txInfo _) =
   case setReceiverAddress ctx of
     Nothing -> False
     Just receiverPKH ->
       let rewardValue = rewardX ctx
+          datum = RecycleDatum
           outputValue = case txInfoOutputs txInfo of
-            [] -> mempty  -- Use a default value for an empty list of outputs
+            [] -> mempty
             (output : _) -> txOutValue output
       in  hasToken (CurrencySymbol "") (TokenName "") outputValue
           && outputValue #== rewardValue
           && receiverPKH #== senderPKH
+{-#INLINABLE validatorR #-}
 
-untypedLambda :: SenderPKH -> UntypedValidator
+untypedLambda :: SenderPKH -> UntypedValidator  
 untypedLambda = mkUntypedValidator . validatorR
 {-#INLINABLE untypedLambda #-}
 
@@ -82,8 +87,7 @@ exports =
   export
     (defExports $ compiledValidator sample)
       { dataExports =
-          [ mkRecycleDatum sample (singleton (CurrencySymbol "636861726c6573") "CYC" 50) policy `toJSONfile` "recycleData1"
-          , mkRecycleDatum sample (singleton (CurrencySymbol "636861726c6573") "CYC" 25) policy `toJSONfile` "recycleData2"
+          [ mkRecycleDatum sample (singleton  (CurrencySymbol "636861726c6573") "CYC" 50) policy `toJSONfile` "recycleData1"
           ]
       }
   where pkh = sample 
