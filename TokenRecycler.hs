@@ -1,7 +1,7 @@
 module Contracts.TokenRecycler where
 
 {-# LANGUAGE TemplateHaskell #-}
-{#- LANGUAGE OverloadedString #-}
+{-# LANGUAGE OverloadedString #-}
 
 import Data.Map qualified as Map
 import Jambhala.Plutus
