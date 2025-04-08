@@ -1,6 +1,7 @@
 module Contracts.TokenRecycler where
 
 {-# LANGUAGE TemplateHaskell #-}
+{#- LANGUAGE OverloadedString #-}
 
 import Data.Map qualified as Map
 import Jambhala.Plutus
@@ -21,7 +22,7 @@ data RecycleDatum = RecycleDatum
   , tokenValue :: TokenValue
   , policyId :: CurrencySymbol
   }
-unstableMakeIsData ''RecycleDatum
+PlutusTx.makeIsDataIndexed  ''RecycleDatum [(''RecycleDatum, 0)]
 
 
 -- | Helper function to check if the given value has at least one token of the given currency symbol and token name.
