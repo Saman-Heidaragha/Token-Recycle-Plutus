@@ -83,13 +83,7 @@ mkRecycleDatum senderPKH tokenValue cr =
 compiledValidator :: SenderPKH -> TokenRecycle
 compiledValidator pkh  = mkValidatorContract ($$(compile[|| untypedLambda ||]) `applyCode` liftCode pkh)
 
-exports :: JambExports
-exports =
-  export
-    (defExports $ compiledValidator sample)
-      { dataExports =
-          [ mkRecycleDatum sample (singleton  (CurrencySymbol "636861726c6573") "CYC" 50) policy `toJSONfile` "recycleData1"
-          ]
-      }
-  where pkh = sample 
-        policy = "847f25daf4873bde08f98368b3b557ca104dc71a625b01c65c928b4e"
+writeValidatorToFile :: IO ()
+writeValidatorToFile = do
+  let validatorScript = compiledValidator sample
+  writeFile "recycle.plutus" (show validatorScript)
