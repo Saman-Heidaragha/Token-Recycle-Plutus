@@ -80,8 +80,10 @@ mkRecycleDatum senderPKH tokenValue cr =
     , policyId = cr
     }
           
-compiledValidator :: SenderPKH -> TokenRecycle
-compiledValidator pkh  = mkValidatorContract ($$(compile[|| untypedLambda ||]) `applyCode` liftCode pkh)
+compiledValidator :: SenderPKH -> Validator
+compiledValidator pkh = mkValidatorScript $
+  $$(PlutusTx.compile [|| \senderPKH' -> untypedLambda senderPKH' ||])
+  `PlutusTx.applyCode` PlutusTx.liftCode pkh
 
 writeValidatorToFile :: IO ()
 writeValidatorToFile = do
